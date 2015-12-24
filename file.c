@@ -7,7 +7,10 @@
 #include <dirent.h>
 #include <string.h>
 #include <time.h>
-char path[]="/home/xmhuster/words/files";
+#include <pwd.h>
+#include <grp.h>
+
+char path[]="/home/xiaomeng/os/dir";
 
 void showmode(unsigned short);
 /*DIR *opendir(const char *name); //打开一个目录
@@ -21,7 +24,7 @@ void printdir(char *dir,int depth){
 	struct stat statbuf;
 
 	if(!(dp=opendir(dir))){ //如果打开dir目录不成功
-		puts("the end~"); //打印出错信息
+		//puts("the end~"); //打印出错信息
 		return;		//返回
 	}
 	chdir(dir); //将dir设置为当前目录
@@ -33,13 +36,23 @@ void printdir(char *dir,int depth){
 		if(abc==S_IFDIR){  //判断是否是目录
 			if((strcmp(entry->d_name,".")==0)||(strcmp(entry->d_name,"..")==0))
 				continue;
-			//puts("dir");
 			//打印目录项的深度，目录名等信息
-			printf("%s\t %d\t ",entry->d_name,depth);
-			showmode(abc);
-			printf("%ld\t ",statbuf.st_size);
+			showmode(statbuf.st_mode);
+			printf("  %ld ",statbuf.st_nlink);
+			printf("%s  %d  ",entry->d_name,depth);
+	
+			struct passwd *wd;
+			wd=getpwuid(statbuf.st_uid);
+			printf("%s  ",wd->pw_name);
+
+			struct group *group;
+			group=getgrgid(statbuf.st_uid);
+			printf("%s  	",group->gr_name);
+
+			printf("%ld  ",statbuf.st_size);
+
 			unsigned long t=statbuf.st_atime;
-			printf("%s\n",ctime(&t));
+			printf("%s",ctime(&t));
 
 			//递归调用printdir，打印子目录的信息，其中depth+4
 			char subpath[100];
@@ -52,11 +65,22 @@ void printdir(char *dir,int depth){
 		else {
 			//puts("file");//打印文件的深度，文件名等信息，文件类型，大小，时间
 			//printf("%d\t",depth);
-			printf("%s\t %d\t ",entry->d_name,depth);
-			showmode(abc);
-			printf("%ld\t ",statbuf.st_size);
+			showmode(statbuf.st_mode);
+			printf("  %ld ",statbuf.st_nlink);
+			printf("%s  %d  ",entry->d_name,depth);
+	
+			struct passwd *wd;
+			wd=getpwuid(statbuf.st_uid);
+			printf("%s  ",wd->pw_name);
+
+			struct group *group;
+			group=getgrgid(statbuf.st_uid);
+			printf("%s  	",group->gr_name);
+
+			printf("%ld  ",statbuf.st_size);
+
 			unsigned long t=statbuf.st_atime;
-			printf("%s\n",ctime(&t));
+			printf("%s",ctime(&t));
 		}
 	}
 	chdir(path);	//返回父目录
@@ -64,16 +88,50 @@ void printdir(char *dir,int depth){
 }
 
 int main(){
-	puts("name\t depth\t mode\t size\t time");
-	printdir(path,0);
+	char dir[100];
+	printf("please input path:\n");
+	scanf("%s",dir);
+	printdir(dir,0);
 	return 0;	
 }
 
 void showmode(unsigned short st_mode){
-	switch(st_mode){
-		case S_IFDIR: printf("dir\t "); break;
-		default: 	  printf("file\t ");break;
-	}
+	if(st_mode&S_IRUSR)
+		putchar('r');
+	else
+	 	putchar('-');			
+	if(st_mode&S_IWUSR)
+		putchar('w');
+	else 
+		putchar('-');
+	if(st_mode&S_IXUSR)
+		putchar('x');
+	else 
+		putchar('-');
+	if(st_mode&S_IRGRP)
+		putchar('r');
+	else 
+		putchar('-');
+	if(st_mode&S_IWGRP)
+		putchar('w');
+	else 
+		putchar('-');
+	if(st_mode&S_IXGRP)
+		putchar('x');
+	else 
+		putchar('-');
+	if(st_mode&S_IROTH)
+		putchar('r');
+	else 
+		putchar('-');
+	if(st_mode&S_IWOTH)
+		putchar('w');
+	else 
+		putchar('-');
+	if(st_mode&S_IXOTH)
+		putchar('x');
+	else 
+		putchar('-');
 }
 
 
